@@ -1,10 +1,20 @@
 var canvas = document.getElementById("game");
 var context = canvas.getContext("2d");
+context.font = "22px Verdana";
 
 var aster = [];
 var player = {x:0, y:300};
 var timer = 0;
-var fire = [];
+var bullet = [];
+var score = 0;
+var hp = 100;
+class Boss {
+  x = 1130;
+  y = 300;
+  dx = -4;
+  dy = 3;
+}
+
 
 var enemy = new Image();
 enemy.src = "assets/media/Ship6/Ship6.png";
@@ -12,8 +22,8 @@ var fonimg = new Image();
 fonimg.src = "assets/game_background_2.png";
 var ship = new Image();
 ship.src = "assets/media/Ship3/Ship3.png";
-var fireimg = new Image();
-fireimg.src = "assets/media/shot5_asset.png";
+var bulletimg = new Image();
+bulletimg.src = "assets/media/shot5_asset.png";
 
 //обработка мыши и клавиатуры
 //мышь
@@ -22,7 +32,7 @@ canvas.addEventListener("mousemove", function(event) {
   player.y = event.offsetY-60;
 });
 canvas.addEventListener("mousedown", function(e){
-  fire.push({
+  bullet.push({
     x:player.x+30,
     y:player.y+10,
     dx:7,
@@ -30,29 +40,49 @@ canvas.addEventListener("mousedown", function(e){
 });
 
 //клавиатура
-var highPressed = false;
-var lowPressed = false;
-canvas.addEventListener("keydown", keyDownHandler, false);
-canvas.addEventListener("keyup", keyUpHandler, false);
+
+let rightPressed = false;
+let leftPressed = false;
+let upPressed = false;
+let downPressed = false;
 
 function keyDownHandler(e) {
-    if(e.keyCode == 38) {
-        highPressed = true;
+    if(e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = true
+    } else if(e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = true
+    } else if(e.key === "Up" || e.key === "ArrowUp") {
+        upPressed = true
+    } else if(e.key === "Down" || e.key === "ArrowDown") {
+        downPressed = true
     }
-    else if(e.keyCode == 40) {
-        lowPressed = true;
     }
-}
 
 function keyUpHandler(e) {
-    if(e.keyCode == 38) {
-        highPressed = false;
+    if(e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = false
+    } else if(e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = false
+    } else if(e.key === "Up" || e.key === "ArrowUp") {
+        upPressed = false
+    } else if(e.key === "Down" || e.key === "ArrowDown") {
+        downPressed = false
     }
-    else if(e.keyCode == 40) {
-        lowPressed = false;
+    }
+
+function MovePlayerWithKeyboard() {
+    if (rightPressed && !leftPressed) {
+        player.x += player.dx;
+    } else if (!rightPressed && leftPressed) {
+        player.x -= player.dx;
+    }
+
+    if (upPressed && !downPressed) {
+        player.y -= player.dy;
+    } else if (!upPressed && downPressed) {
+        player.y += player.dy;
     }
 }
-
 
 
 fonimg.onload = function() {
@@ -76,6 +106,7 @@ function update() {
       dy:Math.random() * 3 - 2,
       del:0});
   }
+
   for(i in aster) {
   aster[i].x = aster[i].x+aster[i].dx;
   aster[i].y = aster[i].y+aster[i].dy;
@@ -83,25 +114,30 @@ function update() {
   if(aster[i].x < -100) aster.splice(i,1);
   if(aster[i].y>=600 || aster[i].y < -20) aster[i].dy = -aster[i].dy;
 
-  for(j in fire) {
-    if(Math.abs(aster[i].x + 40 - fire[j].x - 15) < 50 && Math.abs(aster[i].y - fire[j].y) < 40){
+  for(j in bullet) {
+    if(Math.abs(aster[i].x + 40 - bullet[j].x - 15) < 50 && Math.abs(aster[i].y - bullet[j].y) < 40){
       // expl.push({x:aster[i].x - 25, y:aster[i].y-25, animx:0, animt:0});
       aster[i].del=1;
-      fire.splice(j,1);break;
+      bullet.splice(j,1);break;
     }
   }
-  if (aster[i].del == 1) aster.splice(i,1);
+  if (aster[i].del == 1) {
+    aster.splice(i,1);
+    score +=100;
+  }
 }
-  for(i in fire) {
-    fire[i].x += fire[i].dx;
-    if(fire[i].dx > 1280) fire[i].splice(i,1);
+  for(i in bullet) {
+    bullet[i].x += bullet[i].dx;
+    if(bullet[i].dx > 1280) bullet[i].splice(i,1);
   }
 }
 
 function render() {
   context.drawImage(fonimg, 0, 0, 1280, 700);
+  context.fillText("Score: "+score, 20, 30);
+  context.fillText("HP: " + hp, canvas.width - 180, 30);
   context.drawImage(ship, player.x, player.y);
-  for(i in fire) context.drawImage(fireimg, fire[i].x, fire[i].y);
+  for(i in bullet) context.drawImage(bulletimg, bullet[i].x, bullet[i].y);
   for(i in aster) context.drawImage(enemy, aster[i].x, aster[i].y);
 }
 
